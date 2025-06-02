@@ -1,101 +1,25 @@
-// PWA Builder App - React + TailwindCSS
-// Filename: App.tsx or App.jsx
-
-import React, { useState } from 'react';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-
-export default function App() {
-  const [appName, setAppName] = useState('MyPWA');
-  const [themeColor, setThemeColor] = useState('#3367D6');
-  const [shortName, setShortName] = useState('MyPWA');
-  const [description, setDescription] = useState('A Progressive Web App');
-  const [iconUrl, setIconUrl] = useState('');
-
-  const generateManifest = () => {
-    return {
-      name: appName,
-      short_name: shortName,
-      description,
-      start_url: '.',
-      display: 'standalone',
-      background_color: '#ffffff',
-      theme_color: themeColor,
-      icons: [
-        {
-          src: iconUrl || 'icon-192.png',
-          sizes: '192x192',
-          type: 'image/png'
-        },
-        {
-          src: iconUrl || 'icon-512.png',
-          sizes: '512x512',
-          type: 'image/png'
-        }
-      ]
-    };
-  };
-
-  const generateServiceWorker = () => `
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open('pwa-cache').then((cache) => cache.addAll(['/', '/index.html']))
-  );
-});
-
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
-  );
-});
-`;
-
-  const generateIndexHtml = () => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="${iconUrl || 'icon-192.png'}" />
-  <meta name="theme-color" content="${themeColor}" />
-  <title>${appName}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payment Landing Page</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#3367D6" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(err => console.error('Service Worker Registration Failed:', err));
+        }
+    </script>
 </head>
 <body>
-  <h1>${appName}</h1>
-  <p>${description}</p>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
+    <h1>Support & Payments</h1>
+    <p>Secure payments made easy.</p>
+    <p><strong>PayPal:</strong> crh2123@icloud.com</p>
+    <p><strong>Email for direct payments:</strong> crh2123@icloud.com</p>
+    <button onclick="window.location.href='https://www.paypal.com/paypalme/crh2123'">Pay Now</button>
 </body>
 </html>
-`;
-
-  const buildZip = async () => {
-    const zip = new JSZip();
-    zip.file('manifest.json', JSON.stringify(generateManifest(), null, 2));
-    zip.file('sw.js', generateServiceWorker());
-    zip.file('index.html', generateIndexHtml());
-
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, `${appName}_PWA.zip`);
-  };
-
-  return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">🛠️ PWA Builder</h1>
-      <input className="input" placeholder="App Name" value={appName} onChange={(e) => setAppName(e.target.value)} />
-      <input className="input" placeholder="Short Name" value={shortName} onChange={(e) => setShortName(e.target.value)} />
-      <input className="input" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-      <input className="input" type="color" value={themeColor} onChange={(e) => setThemeColor(e.target.value)} />
-      <input className="input" placeholder="Icon URL (optional)" value={iconUrl} onChange={(e) => setIconUrl(e.target.value)} />
-      <button onClick={buildZip} className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">Download PWA ZIP</button>
-    </div>
-  );
-}
-
-// Tailwind utility class suggestion for .input:
-// Add to global.css or use Tailwind components
-// .input { @apply w-full p-2 border rounded-md; }
