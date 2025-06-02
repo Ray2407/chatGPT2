@@ -1,5 +1,4 @@
-# main.yml or deploy.yml — either name is fine
-name: Deploy to GitHub Pages
+# name: Deploy to GitHub Pages
 
 on:
  push:
@@ -27,3 +26,4 @@ jobs:
 
      - name: Deploy to GitHub Pages
        uses: actions/deploy-pages@v2
+Sent from my iPhone
