@@ -1,72 +1,101 @@
+// PWA Builder App - React + TailwindCSS
+// Filename: App.tsx or App.jsx
+
+import React, { useState } from 'react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+
+export default function App() {
+  const [appName, setAppName] = useState('MyPWA');
+  const [themeColor, setThemeColor] = useState('#3367D6');
+  const [shortName, setShortName] = useState('MyPWA');
+  const [description, setDescription] = useState('A Progressive Web App');
+  const [iconUrl, setIconUrl] = useState('');
+
+  const generateManifest = () => {
+    return {
+      name: appName,
+      short_name: shortName,
+      description,
+      start_url: '.',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: themeColor,
+      icons: [
+        {
+          src: iconUrl || 'icon-192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: iconUrl || 'icon-512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ]
+    };
+  };
+
+  const generateServiceWorker = () => `
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open('pwa-cache').then((cache) => cache.addAll(['/', '/index.html']))
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((res) => res || fetch(e.request))
+  );
+});
+`;
+
+  const generateIndexHtml = () => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RayPWA Builder</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0d9488" />
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 2rem; background: #f0fdf4; color: #111; }
-    h1 { color: #0d9488; }
-    textarea { width: 100%; height: 120px; padding: 10px; font-size: 1rem; }
-    button { background: #0d9488; color: white; padding: 10px 20px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; }
-    .output { margin-top: 1rem; white-space: pre-wrap; background: #e0f2f1; padding: 1rem; border-radius: 6px; }
-    .payment { margin-top: 2rem; }
-  </style>
+  <link rel="icon" href="${iconUrl || 'icon-192.png'}" />
+  <meta name="theme-color" content="${themeColor}" />
+  <title>${appName}</title>
 </head>
 <body>
-  <h1>🛠️ RayPWA Builder</h1>
-  <p>Describe your app and we’ll build a PWA package from it:</p>
-  <textarea id="prompt" placeholder="Example: A to-do list app with dark mode and notifications."></textarea>
-  <br /><br />
-  <button onclick="buildPWA()">Build PWA</button>
-
-  <div class="output" id="output"></div>
-
-  <div class="payment">
-    <h3>💸 Support or Donate</h3>
-    <ul>
-      <li><a href="https://www.paypal.com/paypalme/crh2123" target="_blank">PayPal</a></li>
-      <li><a href="https://buy.stripe.com/test_donation" target="_blank">Stripe (test)</a></li>
-      <li><a href="bitcoin:bc1qexample...">Bitcoin</a></li>
-    </ul>
-  </div>
-
+  <h1>${appName}</h1>
+  <p>${description}</p>
   <script>
-    async function buildPWA() {
-      const prompt = document.getElementById("prompt").value.trim();
-      const output = document.getElementById("output");
-
-      if (!prompt) {
-        output.textContent = "Please describe the app you want to build.";
-        return;
-      }
-
-      // In a full GPT-powered version, this would send to GPT-4 and return HTML/JS files.
-      // For now, we'll simulate the creation.
-      const baseHTML = `
-<!DOCTYPE html>
-<html>
-<head><title>My New PWA</title></head>
-<body><h1>${prompt}</h1><p>This is a PWA created from your input.</p></body>
-</html>`;
-      const manifest = {
-        name: "Generated App",
-        short_name: "GenApp",
-        start_url: ".",
-        display: "standalone",
-        background_color: "#ffffff",
-        theme_color: "#0d9488",
-        icons: []
-      };
-      const serviceWorker = `self.addEventListener('fetch', e => {});`;
-
-      output.innerHTML = `<h3>✅ App Generated!</h3><p>Copy or download these files:</p>
-      <h4>index.html</h4><pre>${baseHTML}</pre>
-      <h4>manifest.json</h4><pre>${JSON.stringify(manifest, null, 2)}</pre>
-      <h4>service-worker.js</h4><pre>${serviceWorker}</pre>`;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
     }
   </script>
 </body>
 </html>
+`;
+
+  const buildZip = async () => {
+    const zip = new JSZip();
+    zip.file('manifest.json', JSON.stringify(generateManifest(), null, 2));
+    zip.file('sw.js', generateServiceWorker());
+    zip.file('index.html', generateIndexHtml());
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `${appName}_PWA.zip`);
+  };
+
+  return (
+    <div className="p-6 max-w-xl mx-auto space-y-4">
+      <h1 className="text-2xl font-bold">🛠️ PWA Builder</h1>
+      <input className="input" placeholder="App Name" value={appName} onChange={(e) => setAppName(e.target.value)} />
+      <input className="input" placeholder="Short Name" value={shortName} onChange={(e) => setShortName(e.target.value)} />
+      <input className="input" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <input className="input" type="color" value={themeColor} onChange={(e) => setThemeColor(e.target.value)} />
+      <input className="input" placeholder="Icon URL (optional)" value={iconUrl} onChange={(e) => setIconUrl(e.target.value)} />
+      <button onClick={buildZip} className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">Download PWA ZIP</button>
+    </div>
+  );
+}
+
+// Tailwind utility class suggestion for .input:
+// Add to global.css or use Tailwind components
+// .input { @apply w-full p-2 border rounded-md; }
