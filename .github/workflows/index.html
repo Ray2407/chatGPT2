@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>My PWA App</title>
+ <link rel="manifest" href="manifest.json" />
+ <meta name="theme-color" content="#317EFB"/>
+ <style>
+   body {
+     font-family: sans-serif;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     height: 100vh;
+     margin: 0;
+     background: #f4f4f4;
+   }
+   #app {
+     text-align: center;
+   }
+   button {
+     padding: 10px 20px;
+     font-size: 1em;
+     margin-top: 20px;
+   }
+ </style>
+</head>
+<body>
+ <div id="app">
+   <h1>Hello PWA!</h1>
+   <p>This is a simple Progressive Web App.</p>
+   <button onclick="alert('You clicked!')">Try Me</button>
+ </div>
+
+ <script>
+   if ('serviceWorker' in navigator) {
+     window.addEventListener('load', () => {
+       navigator.serviceWorker.register('sw.js')
+         .then(reg => console.log('Service Worker registered:', reg.scope))
+         .catch(err => console.error('Service Worker registration failed:', err));
+     });
+   }
+ </script>
+</body>
+</html>
